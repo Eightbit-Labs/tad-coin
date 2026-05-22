@@ -10,9 +10,11 @@ const CLIENT_URL = process.env.CLIENT_URL ?? 'http://localhost:5173';
 app.use(cors({ origin: CLIENT_URL }));
 app.use(express.json());
 
+app.get('/health', (_req, res) => res.json({ status: 'ok' }));
+
 app.use('/api/auth', authRouter);
 app.use('/api/chain', chainRouter);
 
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`TAD Coin backend server running on port ${PORT}`);
 });
