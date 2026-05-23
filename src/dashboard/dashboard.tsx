@@ -7,7 +7,6 @@ import type { Block } from '../blockchain/block';
 import { API_URL, authHeaders } from '../api';
 
 const DIFFICULTY = 5;
-const BLOCK_REWARD = 3.125;
 
 function spawnWorker(block: Block, difficulty: number, onDone: (b: Block) => void) {
   const worker = new Worker(new URL('../blockchain/miningWorker.ts', import.meta.url), { type: 'module' });
@@ -37,6 +36,11 @@ export default function Dashboard() {
         setMining(false);
         setStatus('Could not reach server.');
       });
+
+    fetch(`${API_URL}/api/chain/balance`, { headers: authHeaders() })
+      .then(r => r.json())
+      .then(({ balance }: { balance: number }) => setBalance(balance))
+      .catch(() => {});
   }, []);
 
   function mine() {
@@ -53,9 +57,9 @@ export default function Dashboard() {
           body: JSON.stringify(mined),
         });
         if (res.ok) {
-          const { chain: updated } = await res.json();
+          const { chain: updated, balance: newBalance } = await res.json();
           setChain(updated);
-          setBalance(prev => prev + BLOCK_REWARD);
+          setBalance(newBalance);
           setStatus('');
         } else {
           const updated: Block[] = await fetch(`${API_URL}/api/chain`).then(r => r.json());
