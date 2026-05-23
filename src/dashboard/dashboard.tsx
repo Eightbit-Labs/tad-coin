@@ -6,7 +6,7 @@ import { createBlock } from '../blockchain/block';
 import type { Block } from '../blockchain/block';
 import { API_URL, authHeaders } from '../api';
 
-const DIFFICULTY = 3;
+const DIFFICULTY = 5;
 const BLOCK_REWARD = 3.125;
 
 function spawnWorker(block: Block, difficulty: number, onDone: (b: Block) => void) {
