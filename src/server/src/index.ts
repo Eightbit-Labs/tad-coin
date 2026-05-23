@@ -1,5 +1,7 @@
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
+import { connectDb } from './db';
 import authRouter from './routes/auth';
 import chainRouter from './routes/chain';
 
@@ -15,6 +17,11 @@ app.get('/health', (_req, res) => res.json({ status: 'ok' }));
 app.use('/api/auth', authRouter);
 app.use('/api/chain', chainRouter);
 
-app.listen(PORT, () => {
-  console.log(`TAD Coin backend server running on port ${PORT}`);
+connectDb().then(() => {
+  app.listen(PORT, () => {
+    console.log(`TAD Coin backend server running on port ${PORT}`);
+  });
+}).catch(err => {
+  console.error('Failed to connect to MongoDB:', err);
+  process.exit(1);
 });
