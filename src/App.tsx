@@ -54,7 +54,8 @@ export default function App() {
       <h1>
         TAD Coin
       </h1>
-      <p>Welcome to the multiverse! This site is dedicated to Terry A. Davis.</p>
+      <p>Welcome to the multiverse! This site is dedicated to Terry A. Davis. King Terry the Terrible will prevail. Rest in peace.</p>
+      <p>Learn more about <a href="https://en.wikipedia.org/wiki/Terry_A._Davis">Terry A. Davis</a></p>
       <p>Made and maintained by Lawrence Tong and WerterTheBug</p>
       <button onClick={() => setPopupOpen(true)}>Make Account</button><br />
       <button onClick={() => setSignInOpen(true)}>Sign In</button>
