@@ -81,10 +81,10 @@ export default function Dashboard() {
       <button onClick={mine} disabled={mining}>{mining ? 'Mining...' : 'Mine'}</button><br />
       <button onClick={() => window.open('/logs', 'mining-logs', 'width=600,height=500')}>Open logs</button>
       {status && <p>{status}</p>}
-
+      <h2>Blockchain history:</h2>
       {chain.map(block => (
         <div key={block.index}>
-          <p>Block #{block.index} | Nonce: {block.nonce} | Hash: {block.hash.slice(0, 40)}... {block.hash.startsWith("0".repeat(DIFFICULTY)) ? "✓ Mined" : "✗ Invalid"}</p>
+          <p>Block #{block.index} | Nonce: {block.nonce} | Hash: {block.hash.slice(0, 40)}... {block.hash.startsWith("0".repeat(DIFFICULTY)) ? "[Mined]" : "[Invalid]"}</p>
         </div>
       ))}
     </main>
