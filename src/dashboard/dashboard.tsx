@@ -6,7 +6,7 @@ import { createBlock } from '../blockchain/block';
 import type { Block } from '../blockchain/block';
 import { API_URL, authHeaders } from '../api';
 
-const DIFFICULTY = 5;
+const DIFFICULTY = 8;
 
 function spawnWorker(block: Block, difficulty: number, onDone: (b: Block) => void) {
   const worker = new Worker(new URL('../blockchain/miningWorker.ts', import.meta.url), { type: 'module' });
