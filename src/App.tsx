@@ -21,6 +21,8 @@ export default function App() {
         if (res.ok) {
           const data = await res.json();
           setUserCount(data.count || 0);
+        } else {
+          console.error('Failed to fetch user count. Status:', res.status);
         }
       } catch (error) {
         console.error('Failed to fetch user count:', error);
