@@ -90,6 +90,7 @@ export default function Dashboard() {
           <p>Block #{block.index} | Nonce: {block.nonce} | Hash: {block.hash.slice(0, 40)}... {block.hash.startsWith("0".repeat(DIFFICULTY)) ? "[Mined]" : "[Invalid]"}</p>
         </div>
       ))}
+      <div id="bottom"></div>
     </main>
   );
 }
