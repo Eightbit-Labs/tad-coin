@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Popup } from "./AccountPopup";
 import { ShowAlert as Alertbox} from "./Alert";
 import { SignIn as SignInPopup } from "./SignIn";
@@ -12,6 +12,22 @@ export default function App() {
   const [isAlertOpen, setAlertOpen] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
   const [isSignInOpen, setSignInOpen] = useState(false);
+  const [userCount, setUserCount] = useState(0);
+
+  useEffect(() => {
+    async function fetchUserCount() {
+      try {
+        const res = await fetch(`${API_URL}/api/users/count`);
+        if (res.ok) {
+          const data = await res.json();
+          setUserCount(data.count || 0);
+        }
+      } catch (error) {
+        console.error('Failed to fetch user count:', error);
+      }
+    }
+    fetchUserCount();
+  }, []);
 
   async function createAccount(username: string, password: string) {
     setPopupOpen(false);
@@ -57,6 +73,7 @@ export default function App() {
       <p>Welcome to the multiverse! This site is dedicated to Terry A. Davis. King Terry the Terrible will prevail. Rest in peace.</p>
       <p>Learn more about <a href="https://en.wikipedia.org/wiki/Terry_A._Davis">Terry A. Davis</a></p>
       <p>Made and maintained by Lawrence Tong and WerterTheBug</p>
+      <p>Current users: {userCount}</p>
       <button onClick={() => setPopupOpen(true)}>Make Account</button><br />
       <button onClick={() => setSignInOpen(true)}>Sign In</button>
       <Popup isOpen={isPopupOpen} onClose={() => setPopupOpen(false)} createAccount={createAccount}/>
