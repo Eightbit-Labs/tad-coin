@@ -67,21 +67,43 @@ export default function App() {
   }
 
   return (
-    <main>
-      <a href="/"><img src={tadcoinLogo} alt="TAD Coin Logo" style={{ position: 'fixed', top: '16px', right: '16px', height: '48px' }} /></a>
-      <h1>
-        TAD Coin
-      </h1>
-      <p>Welcome to the multiverse! This site is dedicated to Terry A. Davis. King Terry the Terrible will prevail. Rest in peace.</p>
-      <p>Learn more about <a href="https://en.wikipedia.org/wiki/Terry_A._Davis">Terry A. Davis</a></p>
-      <p>Made and maintained by Lawrence Tong and WerterTheBug</p>
-      <p>Current users: {userCount}</p>
-      <button onClick={() => setPopupOpen(true)}>Make Account</button><br />
-      <button onClick={() => setSignInOpen(true)}>Sign In</button>
+    <main className="retro-main">
+      <header className="header">
+        <div className="header-content">
+          <h1 className="title">TAD Coin</h1>
+          <a href="/" className="logo-link"><img src={tadcoinLogo} alt="TAD Coin Logo" className="logo" /></a>
+        </div>
+      </header>
+
+      <div className="container">
+        <section className="content-box">
+          <h2 className="section-title">About</h2>
+          <div className="section-content">
+            <p>Welcome to the multiverse! This site is dedicated to Terry A. Davis. King Terry the Terrible will prevail. Rest in peace.</p>
+            <p>Learn more about <a href="https://en.wikipedia.org/wiki/Terry_A._Davis" className="link">Terry A. Davis</a></p>
+          </div>
+        </section>
+
+        <section className="content-box">
+          <h2 className="section-title">Community</h2>
+          <div className="section-content">
+            <p><strong className="stat">{userCount}</strong> active traders</p>
+            <p>Made and maintained by Lawrence Tong and WerterTheBug</p>
+          </div>
+        </section>
+
+        <section className="content-box">
+          <h2 className="section-title">Access</h2>
+          <div className="button-group">
+            <button onClick={() => setPopupOpen(true)} className="retro-button">Make Account</button>
+            <button onClick={() => setSignInOpen(true)} className="retro-button">Sign In</button>
+          </div>
+        </section>
+      </div>
+
       <Popup isOpen={isPopupOpen} onClose={() => setPopupOpen(false)} createAccount={createAccount}/>
       <Alertbox alertText={alertMessage} isOpen={isAlertOpen} onClose={() => setAlertOpen(false)}/>
       <SignInPopup isOpen={isSignInOpen} onClose={() => setSignInOpen(false)} UserSignIn={signIn}/>
     </main>
-    
   );
 }
