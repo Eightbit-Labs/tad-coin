@@ -80,10 +80,11 @@ export default function Dashboard() {
       <p><strong>Notice:</strong> Render, has scheduled maintenance for May 27th, 1:00 am UTC, meaning the blockchain will be down for a couple hours.</p>
       <h2>Balance: {balance} TAD</h2>
       <button onClick={mine} disabled={mining}>{mining ? 'Mining...' : 'Mine'}</button><br />
-      <button onClick={() => window.open('/logs', 'mining-logs', 'width=600,height=500')}>Open logs</button>
+      <button onClick={() => window.open('/logs', 'mining-logs', 'width=600,height=500')}>Open logs</button><br />
       <button onClick={() => TransferWindow}>Transfer [Not funcitonal yet]</button>
       {status && <p>{status}</p>}
       <h2>Blockchain history:</h2>
+      <p><a href="#bottom">Jump to most recent</a></p>
       {chain.map(block => (
         <div key={block.index}>
           <p>Block #{block.index} | Nonce: {block.nonce} | Hash: {block.hash.slice(0, 40)}... {block.hash.startsWith("0".repeat(DIFFICULTY)) ? "[Mined]" : "[Invalid]"}</p>
