@@ -5,7 +5,6 @@ import { useState, useRef, useEffect } from 'react';
 import { createBlock } from '../blockchain/block';
 import type { Block } from '../blockchain/block';
 import { API_URL, authHeaders } from '../api';
-import TransferWindow from '../dashboard/transfer'
 
 const DIFFICULTY = 8;
 
@@ -81,7 +80,7 @@ export default function Dashboard() {
       <h2>Balance: {balance} TAD</h2>
       <button onClick={mine} disabled={mining}>{mining ? 'Mining...' : 'Mine'}</button><br />
       <button onClick={() => window.open('/logs', 'mining-logs', 'width=600,height=500')}>Open logs</button><br />
-      <button onClick={() => TransferWindow}>Transfer [Not funcitonal yet]</button>
+      <button onClick={() => window.open('/transfer', 'transfer-window', 'width=700,height=600')}>Transfer</button>
       {status && <p>{status}</p>}
       <h2>Blockchain history:</h2>
       <p id='top'><a href="#bottom">Jump to most recent</a></p>

@@ -6,5 +6,5 @@ TAD Coin is a lightweight blockchain designed to be minable on laptops.
 
 ## Tech stack
 ---
-React+Vite on the client side
+React+Vite on the client side <br>
 MongoDB+Render for storing the chain
