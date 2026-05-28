@@ -21,7 +21,7 @@ export default function Dashboard() {
   const [mining, setMining] = useState(true);
   const [status, setStatus] = useState('Loading chain...');
   const [balance, setBalance] = useState(0);
-  const username = location.state?.username ?? sessionStorage.getItem('username') ?? 'Unknown';
+  const username = location.state?.username ?? localStorage.getItem('username') ?? 'Unknown';
   const workerRef = useRef<Worker | null>(null);
 
   useEffect(() => {

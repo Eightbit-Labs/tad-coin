@@ -25,7 +25,7 @@ export default function TransferWindow() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [status, setStatus] = useState('');
-  const username = sessionStorage.getItem('username') ?? 'Unknown';
+  const username = localStorage.getItem('username') ?? 'Unknown';
 
   useEffect(() => {
     async function loadTransferData() {

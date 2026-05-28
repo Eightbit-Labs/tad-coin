@@ -61,8 +61,8 @@ export default function App() {
       return;
     }
     const { token } = await res.json();
-    sessionStorage.setItem('token', token);
-    sessionStorage.setItem('username', username);
+    localStorage.setItem('token', token);
+    localStorage.setItem('username', username);
     navigate('/dashboard', { state: { username } });
   }
 
