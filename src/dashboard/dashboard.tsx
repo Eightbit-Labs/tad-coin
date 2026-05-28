@@ -84,13 +84,14 @@ export default function Dashboard() {
       <button onClick={() => TransferWindow}>Transfer [Not funcitonal yet]</button>
       {status && <p>{status}</p>}
       <h2>Blockchain history:</h2>
-      <p><a href="#bottom">Jump to most recent</a></p>
+      <p id='top'><a href="#bottom">Jump to most recent</a></p>
       {chain.map(block => (
         <div key={block.index}>
           <p>Block #{block.index} | Nonce: {block.nonce} | Hash: {block.hash.slice(0, 40)}... {block.hash.startsWith("0".repeat(DIFFICULTY)) ? "[Mined]" : "[Invalid]"}</p>
         </div>
       ))}
       <div id="bottom"></div>
+      <p><a href="#top">Back to top</a></p>
     </main>
   );
 }
