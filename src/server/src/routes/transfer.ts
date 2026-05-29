@@ -22,6 +22,58 @@ function hasValidPrecision(amount: number): boolean {
   return Number.isInteger(amount * scale);
 }
 
+type IncomingTransfer = {
+  id: string;
+  blockIndex: number;
+  timestamp: number;
+  fromUsername: string;
+  amount: number;
+};
+
+function parseIncomingTransfer(block: Pick<Block, 'hash' | 'index' | 'timestamp' | 'data'>, username: string): IncomingTransfer | null {
+  try {
+    const data = JSON.parse(block.data) as {
+      type?: unknown;
+      from?: unknown;
+      to?: unknown;
+      amount?: unknown;
+    };
+
+    if (data.type !== 'transfer' || data.to !== username) return null;
+    if (typeof data.from !== 'string' || typeof data.amount !== 'number' || !Number.isFinite(data.amount)) return null;
+
+    return {
+      id: block.hash,
+      blockIndex: block.index,
+      timestamp: block.timestamp,
+      fromUsername: data.from,
+      amount: data.amount,
+    };
+  } catch {
+    return null;
+  }
+}
+
+router.get('/incoming', requireAuth, async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { username } = (req as AuthedRequest).user;
+    const blocks = await getDb()
+      .collection<Pick<Block, 'hash' | 'index' | 'timestamp' | 'data'>>('blocks')
+      .find({}, { projection: { _id: 0, index: 1, timestamp: 1, data: 1, hash: 1 } })
+      .sort({ index: -1 })
+      .toArray();
+
+    const transfers = blocks
+      .map(block => parseIncomingTransfer(block, username))
+      .filter((transfer): transfer is IncomingTransfer => transfer !== null);
+
+    res.json({ transfers });
+  } catch (error) {
+    console.error('Failed to load incoming transfers:', error);
+    res.status(500).json({ error: 'Failed to load incoming transfers' });
+  }
+});
+
 router.post('/', requireAuth, async (req: Request, res: Response): Promise<void> => {
   const { username: fromUsername } = (req as AuthedRequest).user;
   const { toUsername, amount } = req.body as { toUsername: unknown; amount: unknown };
