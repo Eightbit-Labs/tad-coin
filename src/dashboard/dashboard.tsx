@@ -6,7 +6,7 @@ import { createBlock } from '../blockchain/block';
 import type { Block } from '../blockchain/block';
 import { API_URL, authHeaders } from '../api';
 
-const DIFFICULTY = 8;
+const DIFFICULTY = 7;
 const NOTIFICATION_REFRESH_MS = 5000;
 const NOTIFICATION_STORAGE_PREFIX = 'tadcoin_seen_transfer_notifications';
 

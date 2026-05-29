@@ -1,7 +1,7 @@
 import { createBlock, type Block } from './block';
 import { calculateHash } from './hash';
 
-export const DIFFICULTY = 8;
+export const DIFFICULTY = 7;
 
 export function mineBlock(block: Block): Block {
   const b = { ...block };
