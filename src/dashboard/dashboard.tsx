@@ -76,7 +76,7 @@ export default function Dashboard() {
     <main>
       <h1>Welcome, {username}</h1>
       <a href="/"><img src={tadcoinLogo} alt="TAD Coin Logo" style={{ position: 'fixed', top: '16px', right: '16px', height: '48px' }} /></a>
-      <p><strong>Notice:</strong> Render, has scheduled maintenance for May 27th, 1:00 am UTC, meaning the blockchain will be down for a couple hours.</p>
+      <p><strong>Notice:</strong> Render has scheduled maintenance for May 27th, 1:00 am UTC, meaning the blockchain will be down for a couple hours.</p>
       <h2>Balance: {balance} TAD</h2>
       <button onClick={mine} disabled={mining}>{mining ? 'Mining...' : 'Mine'}</button><br />
       <button onClick={() => window.open('/logs', 'mining-logs', 'width=600,height=500')}>Open logs</button><br />

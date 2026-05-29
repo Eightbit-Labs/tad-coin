@@ -141,7 +141,7 @@ export default function TransferWindow() {
       </button>{' '}
       <button onClick={() => window.close()}>Close</button>
       {status && <p>{status}</p>}
-      <p><a href="/">Learn how your transfers are secured</a></p>
+      <p><a href="https://decenter.princeton.edu/news/how-secure-is-crypto-as-secure-as-the-internet/">Learn how your transfers are secured</a></p>
     </main>
   );
 }
