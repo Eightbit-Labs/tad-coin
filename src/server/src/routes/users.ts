@@ -14,6 +14,32 @@ router.get('/count', async (_req: Request, res: Response): Promise<void> => {
   }
 });
 
+router.get('/leaderboard', async (_req: Request, res: Response): Promise<void> => {
+  try {
+    const db = getDb();
+    const [users, balances] = await Promise.all([
+      db.collection('users').find({}, { projection: { _id: 0, username: 1 } }).toArray(),
+      db.collection('balances').find({}, { projection: { _id: 0, username: 1, balance: 1 } }).toArray(),
+    ]);
+
+    const balanceByUser = new Map(
+      balances.map(entry => [String(entry.username), Number(entry.balance ?? 0)]),
+    );
+
+    const leaderboard = users
+      .map(user => ({
+        username: String(user.username),
+        balance: balanceByUser.get(String(user.username)) ?? 0,
+      }))
+      .sort((a, b) => b.balance - a.balance || a.username.localeCompare(b.username));
+
+    res.json({ leaderboard });
+  } catch (error) {
+    console.error('Error loading leaderboard:', error);
+    res.status(500).json({ error: 'Failed to load leaderboard' });
+  }
+});
+
 router.get('/recipients', requireAuth, async (req: Request, res: Response): Promise<void> => {
   try {
     const { username } = (req as AuthedRequest).user;

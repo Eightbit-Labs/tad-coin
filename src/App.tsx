@@ -1,10 +1,21 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Popup } from "./AccountPopup";
 import { ShowAlert as Alertbox} from "./Alert";
 import { SignIn as SignInPopup } from "./SignIn";
 import { useNavigate } from "react-router-dom";
 import tadcoinLogo from '../tadcoin.png';
 import { API_URL } from './api';
+
+type LeaderboardEntry = {
+  username: string;
+  balance: number;
+};
+
+type LeaderboardResponse = {
+  leaderboard: LeaderboardEntry[];
+};
+
+const LEADERBOARD_REFRESH_SECONDS = 30;
 
 export default function App() {
   const navigate = useNavigate();
@@ -13,6 +24,10 @@ export default function App() {
   const [alertMessage, setAlertMessage] = useState('');
   const [isSignInOpen, setSignInOpen] = useState(false);
   const [userCount, setUserCount] = useState(0);
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [leaderboardLoading, setLeaderboardLoading] = useState(true);
+  const [leaderboardError, setLeaderboardError] = useState('');
+  const [secondsUntilRefresh, setSecondsUntilRefresh] = useState(LEADERBOARD_REFRESH_SECONDS);
 
   useEffect(() => {
     async function fetchUserCount() {
@@ -29,6 +44,45 @@ export default function App() {
       }
     }
     fetchUserCount();
+  }, []);
+
+  const fetchLeaderboard = useCallback(async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/users/leaderboard`);
+      if (!res.ok) {
+        throw new Error(`Leaderboard request failed with status ${res.status}`);
+      }
+
+      const data = await res.json() as LeaderboardResponse;
+      setLeaderboard(Array.isArray(data.leaderboard) ? data.leaderboard : []);
+      setLeaderboardError('');
+    } catch (error) {
+      console.error('Failed to fetch leaderboard:', error);
+      setLeaderboardError('Failed to load leaderboard.');
+    } finally {
+      setLeaderboardLoading(false);
+      setSecondsUntilRefresh(LEADERBOARD_REFRESH_SECONDS);
+    }
+  }, []);
+
+  useEffect(() => {
+    const initialLoadTimer = window.setTimeout(() => {
+      void fetchLeaderboard();
+    }, 0);
+
+    const refreshTimer = window.setInterval(fetchLeaderboard, LEADERBOARD_REFRESH_SECONDS * 1000);
+    return () => {
+      window.clearTimeout(initialLoadTimer);
+      window.clearInterval(refreshTimer);
+    };
+  }, [fetchLeaderboard]);
+
+  useEffect(() => {
+    const countdownTimer = window.setInterval(() => {
+      setSecondsUntilRefresh(current => (current <= 1 ? LEADERBOARD_REFRESH_SECONDS : current - 1));
+    }, 1000);
+
+    return () => window.clearInterval(countdownTimer);
   }, []);
 
   async function createAccount(username: string, password: string) {
@@ -89,6 +143,26 @@ export default function App() {
           <div className="section-content">
             <p><strong className="stat">{userCount}</strong> active traders</p>
             <p>Made and maintained by Lawrence Tong and WerterTheBug</p>
+          </div>
+        </section>
+
+        <section className="content-box">
+          <h2 className="section-title">Leaderboard</h2>
+          <div className="section-content">
+            <p>Updates globally every 30 seconds. Refreshes in <strong className="stat">{secondsUntilRefresh}s</strong>.</p>
+            {leaderboardLoading && leaderboard.length === 0 ? (
+              <p>Loading leaderboard...</p>
+            ) : leaderboardError ? (
+              <p>{leaderboardError}</p>
+            ) : leaderboard.length === 0 ? (
+              <p>No balances available yet.</p>
+            ) : (
+              leaderboard.map((entry, index) => (
+                <p key={entry.username}>
+                  <strong className="stat">#{index + 1}</strong> {entry.username} — <strong className="stat">{entry.balance} TAD</strong>
+                </p>
+              ))
+            )}
           </div>
         </section>
 
