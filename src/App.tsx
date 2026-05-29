@@ -147,9 +147,17 @@ export default function App() {
         </section>
 
         <section className="content-box">
+          <h2 className="section-title">Join</h2>
+          <div className="button-group">
+            <button onClick={() => setPopupOpen(true)} className="retro-button">Make Account</button>
+            <button onClick={() => setSignInOpen(true)} className="retro-button">Sign In</button>
+          </div>
+        </section>
+
+        <section className="content-box">
           <h2 className="section-title">Leaderboard</h2>
           <div className="section-content">
-            <p>Updates globally every 30 seconds. Refreshes in <strong className="stat">{secondsUntilRefresh}s</strong>.</p>
+            <p>Updates 30 seconds. Refreshes in <strong className="stat">{secondsUntilRefresh}s</strong>.</p>
             {leaderboardLoading && leaderboard.length === 0 ? (
               <p>Loading leaderboard...</p>
             ) : leaderboardError ? (
@@ -163,14 +171,6 @@ export default function App() {
                 </p>
               ))
             )}
-          </div>
-        </section>
-
-        <section className="content-box">
-          <h2 className="section-title">Access</h2>
-          <div className="button-group">
-            <button onClick={() => setPopupOpen(true)} className="retro-button">Make Account</button>
-            <button onClick={() => setSignInOpen(true)} className="retro-button">Sign In</button>
           </div>
         </section>
       </div>
