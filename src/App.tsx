@@ -93,7 +93,7 @@ export default function App() {
       body: JSON.stringify({ username, password }),
     });
     if (res.ok) {
-      setAlertMessage('Account creation success');
+      setAlertMessage('Account created successfully, you can now sign in.');
     } else {
       const err = await res.json();
       setAlertMessage(err.error ?? 'Account creation failed');
