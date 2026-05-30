@@ -16,6 +16,18 @@ function isGenesisBlockValid(block: Block): boolean {
   );
 }
 
+function isGenesisBlockIntegrityValid(block: Block): boolean {
+  return (
+    block.index === 0 &&
+    block.previousHash === '0' &&
+    typeof block.data === 'string' &&
+    Number.isInteger(block.timestamp) &&
+    Number.isInteger(block.nonce) &&
+    block.nonce >= 0 &&
+    block.hash === calculateHash(block)
+  );
+}
+
 export async function connectDb(): Promise<void> {
   const client = new MongoClient(process.env.MONGODB_URI!);
   await client.connect();
@@ -46,8 +58,12 @@ export async function connectDb(): Promise<void> {
     genesis = await blocks.findOne<Block>({ index: 0 });
   }
 
-  if (!genesis || !isGenesisBlockValid(genesis)) {
+  if (!genesis || !isGenesisBlockIntegrityValid(genesis)) {
     throw new Error('Invalid genesis block detected in database');
+  }
+
+  if (!isGenesisBlockValid(genesis)) {
+    console.warn('Legacy genesis block detected; continuing with compatibility mode.');
   }
 }
 
