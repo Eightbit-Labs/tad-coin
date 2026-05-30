@@ -23,6 +23,10 @@ type IncomingTransferResponse = {
   transfers: IncomingTransfer[];
 };
 
+type SupplyResponse = {
+  remainingSupply: number;
+};
+
 function spawnWorker(block: Block, difficulty: number, onDone: (b: Block) => void) {
   const worker = new Worker(new URL('../blockchain/miningWorker.ts', import.meta.url), { type: 'module' });
   worker.onmessage = (e: MessageEvent<Block>) => {
@@ -56,10 +60,20 @@ export default function Dashboard() {
   const [mining, setMining] = useState(true);
   const [status, setStatus] = useState('Loading chain...');
   const [balance, setBalance] = useState(0);
+  const [amountLeft, setAmountLeft] = useState(0);
   const [notifications, setNotifications] = useState<IncomingTransfer[]>([]);
   const [notificationStatus, setNotificationStatus] = useState('');
   const username = location.state?.username ?? getUsername() ?? 'Unknown';
   const workerRef = useRef<Worker | null>(null);
+
+  async function refreshRemainingSupply(): Promise<void> {
+    const res = await fetch(`${API_URL}/api/chain/supply`);
+    if (!res.ok) {
+      return;
+    }
+    const data = await res.json() as SupplyResponse;
+    setAmountLeft(data.remainingSupply);
+  }
 
   useEffect(() => {
     fetch(`${API_URL}/api/chain`)
@@ -78,6 +92,14 @@ export default function Dashboard() {
       .then(r => r.json())
       .then(({ balance }: { balance: number }) => setBalance(balance))
       .catch(() => {});
+
+    const supplyTimer = window.setTimeout(() => {
+      void refreshRemainingSupply();
+    }, 0);
+
+    return () => {
+      window.clearTimeout(supplyTimer);
+    };
   }, []);
 
   useEffect(() => {
@@ -149,9 +171,10 @@ export default function Dashboard() {
           });
 
           if (res.ok) {
-            const { chain: updated, balance: newBalance } = await res.json();
+            const { chain: updated, balance: newBalance, remainingSupply } = await res.json() as { chain: Block[]; balance: number; remainingSupply: number };
             setChain(updated);
             setBalance(newBalance);
+            setAmountLeft(remainingSupply);
             setStatus('');
             checkPageStatus(
               'Mining completed',
@@ -162,6 +185,7 @@ export default function Dashboard() {
             const errorData = await res.json() as { error?: string };
             const updated: Block[] = await fetch(`${API_URL}/api/chain`).then(r => r.json());
             setChain(updated);
+            refreshRemainingSupply().catch(() => {});
             setStatus(errorData.error ?? 'Block rejected — chain updated. Try again.');
             checkPageStatus(
               'Mining failed',
@@ -185,6 +209,7 @@ export default function Dashboard() {
     <main>
       <h1>Welcome, {username}</h1>
       <a href="/"><img src={tadcoinLogo} alt="TAD Coin Logo" style={{ position: 'fixed', top: '16px', right: '16px', height: '48px' }} /></a>
+      <h2>{amountLeft} TAD left to mine</h2>
       <h2>Balance: {balance} TAD</h2>
       <section className="content-box">
         <h2 className="section-title">Notifications</h2>

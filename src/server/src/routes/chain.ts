@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { MongoServerError } from 'mongodb';
+import { Db, MongoServerError, ClientSession } from 'mongodb';
 import { isBlockValid } from '../blockchain/blockchain';
 import type { Block } from '../blockchain/block';
 import { getClient, getDb } from '../db';
@@ -18,6 +18,15 @@ class MiningError extends Error {
   ) {
     super(message);
   }
+}
+
+async function getRemainingSupply(db: Db, session?: ClientSession): Promise<number> {
+  const totalSupplyDoc = await db.collection('balances').aggregate<{ total: number }>(
+    [{ $group: { _id: null, total: { $sum: '$balance' } } }],
+    { session }
+  ).next();
+  const totalSupply = Number(totalSupplyDoc?.total ?? 0);
+  return Math.max(0, MAX_TOTAL_SUPPLY - totalSupply);
 }
 
 function parseSubmittedBlock(body: unknown): Block | null {
@@ -54,6 +63,11 @@ router.get('/balance', requireAuth, async (req: Request, res: Response) => {
   res.json({ balance: doc?.balance ?? 0 });
 });
 
+router.get('/supply', async (_req: Request, res: Response) => {
+  const remainingSupply = await getRemainingSupply(getDb());
+  res.json({ maxSupply: MAX_TOTAL_SUPPLY, remainingSupply });
+});
+
 router.post('/submit', requireAuth, async (req: Request, res: Response) => {
   try {
     const block = parseSubmittedBlock(req.body);
@@ -75,12 +89,7 @@ router.post('/submit', requireAuth, async (req: Request, res: Response) => {
           throw new MiningError(400, 'Invalid block — chain may have advanced, re-fetch and try again');
         }
 
-        const totalSupplyDoc = await db.collection('balances').aggregate<{ total: number }>(
-          [{ $group: { _id: null, total: { $sum: '$balance' } } }],
-          { session }
-        ).next();
-        const totalSupply = Number(totalSupplyDoc?.total ?? 0);
-        const remainingSupply = MAX_TOTAL_SUPPLY - totalSupply;
+        const remainingSupply = await getRemainingSupply(db, session);
 
         if (remainingSupply <= 0) {
           throw new MiningError(409, 'Maximum total supply reached');
@@ -96,7 +105,8 @@ router.post('/submit', requireAuth, async (req: Request, res: Response) => {
         );
 
         const chain = await blocks.find({}, { session }).sort({ index: 1 }).toArray();
-        return { chain, balance: balanceDoc?.balance ?? reward };
+        const remainingAfterReward = Math.max(0, remainingSupply - reward);
+        return { chain, balance: balanceDoc?.balance ?? reward, remainingSupply: remainingAfterReward };
       });
     });
 
@@ -110,6 +120,7 @@ router.post('/submit', requireAuth, async (req: Request, res: Response) => {
       chain: responsePayload.chain,
       balance: responsePayload.balance,
       maxSupply: MAX_TOTAL_SUPPLY,
+      remainingSupply: responsePayload.remainingSupply,
     });
   } catch (error) {
     if (error instanceof MiningError) {
