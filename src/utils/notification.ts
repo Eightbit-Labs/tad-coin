@@ -11,7 +11,7 @@ function sendNotification({ title, message, user }: NotificationTarget): void {
   });
 
   notification.onclick = () => {
-    window.open(window.location.origin, '_blank');
+    window.open(window.location.origin, '_blank', 'noopener,noreferrer');
     notification.close();
   };
 }

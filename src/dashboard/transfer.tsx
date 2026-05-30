@@ -1,6 +1,6 @@
 import '../index.css';
 import { useEffect, useState } from 'react';
-import { API_URL, authHeaders, getToken } from '../api';
+import { API_URL, authHeaders, getToken, getUsername } from '../api';
 
 type RecipientsResponse = {
   users: string[];
@@ -25,7 +25,7 @@ export default function TransferWindow() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [status, setStatus] = useState('');
-  const username = localStorage.getItem('username') ?? 'Unknown';
+  const username = getUsername() ?? 'Unknown';
 
   useEffect(() => {
     async function loadTransferData() {

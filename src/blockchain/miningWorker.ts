@@ -6,7 +6,7 @@ self.onmessage = (e: MessageEvent<{ block: Block; difficulty: number }>) => {
   const channel = new BroadcastChannel('mining-logs');
   channel.postMessage({ type: 'start' });
 
-  let minedBlock = { ...block };
+  const minedBlock = { ...block };
   const target = '0'.repeat(difficulty);
   const batch: { nonce: number; hash: string }[] = [];
 

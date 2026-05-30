@@ -115,8 +115,10 @@ export default function App() {
       return;
     }
     const { token } = await res.json();
-    localStorage.setItem('token', token);
-    localStorage.setItem('username', username);
+    sessionStorage.setItem('token', token);
+    sessionStorage.setItem('username', username);
+    localStorage.removeItem('token');
+    localStorage.removeItem('username');
     navigate('/dashboard', { state: { username } });
   }
 

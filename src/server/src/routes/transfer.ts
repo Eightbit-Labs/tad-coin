@@ -7,6 +7,7 @@ import { requireAuth, type AuthedRequest } from '../middleware/auth';
 
 const router = Router();
 const MAX_DECIMALS = 8;
+const MAX_USERNAME_LENGTH = 32;
 
 class TransferError extends Error {
   constructor(
@@ -20,6 +21,32 @@ class TransferError extends Error {
 function hasValidPrecision(amount: number): boolean {
   const scale = 10 ** MAX_DECIMALS;
   return Number.isInteger(amount * scale);
+}
+
+type TransferPayload = {
+  toUsername: string;
+  amount: number;
+};
+
+function parseTransferPayload(body: unknown): TransferPayload | null {
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return null;
+  }
+
+  const { toUsername, amount } = body as { toUsername?: unknown; amount?: unknown };
+  if (typeof toUsername !== 'string' || typeof amount !== 'number') {
+    return null;
+  }
+
+  const recipient = toUsername.trim();
+  if (recipient.length === 0 || recipient.length > MAX_USERNAME_LENGTH) {
+    return null;
+  }
+  if (!Number.isFinite(amount) || amount <= 0) {
+    return null;
+  }
+
+  return { toUsername: recipient, amount };
 }
 
 type IncomingTransfer = {
@@ -76,23 +103,20 @@ router.get('/incoming', requireAuth, async (req: Request, res: Response): Promis
 
 router.post('/', requireAuth, async (req: Request, res: Response): Promise<void> => {
   const { username: fromUsername } = (req as AuthedRequest).user;
-  const { toUsername, amount } = req.body as { toUsername: unknown; amount: unknown };
 
-  if (typeof toUsername !== 'string' || toUsername.trim() === '') {
-    res.status(400).json({ error: 'Recipient username is required' });
+  const payload = parseTransferPayload(req.body);
+  if (!payload) {
+    res.status(400).json({ error: 'Recipient username and amount are required' });
     return;
   }
-  if (typeof amount !== 'number' || !Number.isFinite(amount) || amount <= 0) {
-    res.status(400).json({ error: 'Amount must be a positive number' });
-    return;
-  }
+
+  const { toUsername, amount } = payload;
   if (!hasValidPrecision(amount)) {
     res.status(400).json({ error: `Amount cannot have more than ${MAX_DECIMALS} decimal places` });
     return;
   }
 
-  const recipient = toUsername.trim();
-  if (recipient === fromUsername) {
+  if (toUsername === fromUsername) {
     res.status(400).json({ error: 'Cannot transfer to yourself' });
     return;
   }
@@ -106,7 +130,7 @@ router.post('/', requireAuth, async (req: Request, res: Response): Promise<void>
   try {
     const responsePayload = await client.withSession(async (session) => {
       return session.withTransaction(async () => {
-        const recipientUser = await users.findOne({ username: recipient }, { session, projection: { _id: 1 } });
+        const recipientUser = await users.findOne({ username: toUsername }, { session, projection: { _id: 1 } });
         if (!recipientUser) {
           throw new TransferError(404, 'Recipient user not found');
         }
@@ -127,7 +151,7 @@ router.post('/', requireAuth, async (req: Request, res: Response): Promise<void>
         }
 
         await balances.findOneAndUpdate(
-          { username: recipient },
+          { username: toUsername },
           { $inc: { balance: amount } },
           { session, upsert: true, returnDocument: 'after' }
         );
@@ -135,7 +159,7 @@ router.post('/', requireAuth, async (req: Request, res: Response): Promise<void>
         const transferData = JSON.stringify({
           type: 'transfer',
           from: fromUsername,
-          to: recipient,
+          to: toUsername,
           amount,
           timestamp: Date.now(),
         });

@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-
-const SECRET = process.env.JWT_SECRET ?? 'dev-secret-change-in-production';
+import { JWT_SECRET } from '../config';
 
 export type AuthedRequest = Request & { user: { username: string } };
 
@@ -13,7 +12,7 @@ export function requireAuth(req: Request, res: Response, next: NextFunction): vo
   }
 
   try {
-    (req as AuthedRequest).user = jwt.verify(auth.slice(7), SECRET) as { username: string };
+    (req as AuthedRequest).user = jwt.verify(auth.slice(7), JWT_SECRET) as { username: string };
     next();
   } catch {
     res.status(401).json({ error: 'Invalid token' });

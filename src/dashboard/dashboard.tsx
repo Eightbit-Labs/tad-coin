@@ -4,7 +4,8 @@ import tadcoinLogo from '../../tadcoin.png';
 import { useState, useRef, useEffect } from 'react';
 import { createBlock } from '../blockchain/block';
 import type { Block } from '../blockchain/block';
-import { API_URL, authHeaders } from '../api';
+import { API_URL, authHeaders, getUsername } from '../api';
+import checkPageStatus from '../utils/notification';
 
 const DIFFICULTY = 7;
 const NOTIFICATION_REFRESH_MS = 5000;
@@ -24,7 +25,10 @@ type IncomingTransferResponse = {
 
 function spawnWorker(block: Block, difficulty: number, onDone: (b: Block) => void) {
   const worker = new Worker(new URL('../blockchain/miningWorker.ts', import.meta.url), { type: 'module' });
-  worker.onmessage = (e: MessageEvent<Block>) => { onDone(e.data); worker.terminate(); };
+  worker.onmessage = (e: MessageEvent<Block>) => {
+    onDone(e.data);
+    worker.terminate();
+  };
   worker.postMessage({ block, difficulty });
   return worker;
 }
@@ -54,7 +58,7 @@ export default function Dashboard() {
   const [balance, setBalance] = useState(0);
   const [notifications, setNotifications] = useState<IncomingTransfer[]>([]);
   const [notificationStatus, setNotificationStatus] = useState('');
-  const username = location.state?.username ?? localStorage.getItem('username') ?? 'Unknown';
+  const username = location.state?.username ?? getUsername() ?? 'Unknown';
   const workerRef = useRef<Worker | null>(null);
 
   useEffect(() => {
@@ -98,6 +102,13 @@ export default function Dashboard() {
         }
 
         if (unseen.length > 0) {
+          unseen.forEach(transfer => {
+            checkPageStatus(
+              'Transfer received',
+              `Received ${transfer.amount} TAD from ${transfer.fromUsername} in block #${transfer.blockIndex}`,
+              transfer.fromUsername
+            );
+          });
           setNotifications(prev => [...unseen, ...prev].slice(0, 5));
           unseen.forEach(transfer => seenIds.add(transfer.id));
           saveSeenTransferIds(storageKey, seenIds);
@@ -130,23 +141,42 @@ export default function Dashboard() {
     setStatus('Mining...');
     workerRef.current = spawnWorker(newBlock, DIFFICULTY, (mined) => {
       async function submit() {
-        const res = await fetch(`${API_URL}/api/chain/submit`, {
-          method: 'POST',
-          headers: authHeaders(),
-          body: JSON.stringify(mined),
-        });
-        if (res.ok) {
-          const { chain: updated, balance: newBalance } = await res.json();
-          setChain(updated);
-          setBalance(newBalance);
-          setStatus('');
-        } else {
-          const updated: Block[] = await fetch(`${API_URL}/api/chain`).then(r => r.json());
-          setChain(updated);
-          setStatus('Block rejected — chain updated. Try again.');
+        try {
+          const res = await fetch(`${API_URL}/api/chain/submit`, {
+            method: 'POST',
+            headers: authHeaders(),
+            body: JSON.stringify(mined),
+          });
+
+          if (res.ok) {
+            const { chain: updated, balance: newBalance } = await res.json();
+            setChain(updated);
+            setBalance(newBalance);
+            setStatus('');
+            checkPageStatus(
+              'Mining completed',
+              `You solved block #${mined.index} and your balance is now ${newBalance} TAD.`,
+              username
+            );
+          } else {
+            const errorData = await res.json() as { error?: string };
+            const updated: Block[] = await fetch(`${API_URL}/api/chain`).then(r => r.json());
+            setChain(updated);
+            setStatus(errorData.error ?? 'Block rejected — chain updated. Try again.');
+            checkPageStatus(
+              'Mining failed',
+              errorData.error ?? 'Your mined block was rejected by the network.',
+              username
+            );
+          }
+        } catch {
+          setStatus('Could not reach server.');
+          checkPageStatus('Mining failed', 'Could not reach the server while submitting your block.', username);
+        } finally {
+          setMining(false);
         }
-        setMining(false);
       }
+
       submit();
     });
   }

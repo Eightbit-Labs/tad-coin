@@ -26,7 +26,7 @@ export function isChainValid(chain: Block[], difficulty: number): boolean {
 }
 
 export function mineBlock(block: Block, difficulty: number): Block {
-  let minedBlock = { ...block };
+  const minedBlock = { ...block };
   while (!minedBlock.hash.startsWith("0".repeat(difficulty))) {
     minedBlock.nonce++;
     minedBlock.hash = calculateHash(minedBlock);
